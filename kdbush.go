@@ -8,16 +8,16 @@ import (
 // It's just simply returns points coordinates
 // Called once, only when index created, so you could calc values on the fly for this interface
 type Point interface {
-	Coordinates() (X, Y float64)
+	Coordinates() (X, Y float32)
 }
 
 // Minimal struct, that implements Point interface
 type SimplePoint struct {
-	X, Y float64
+	X, Y float32
 }
 
 // SimplePoint's  implementation of Point interface
-func (sp *SimplePoint) Coordinates() (float64, float64) {
+func (sp *SimplePoint) Coordinates() (float32, float32) {
 	return sp.X, sp.Y
 }
 
@@ -31,7 +31,7 @@ type KDBush struct {
 	Points   []Point
 
 	idxs   []int     //array of indexes
-	coords []float64 //array of coordinates
+	coords []float32 //array of coordinates
 }
 
 // Create new index from points
@@ -47,10 +47,10 @@ func NewBush(points []Point, nodeSize int) *KDBush {
 }
 
 // Finds all items within the given bounding box and returns an array of indices that refer to the items in the original points input slice.
-func (bush *KDBush) Range(minX, minY, maxX, maxY float64) []int {
+func (bush *KDBush) Range(minX, minY, maxX, maxY float32) []int {
 	stack := []int{0, len(bush.idxs) - 1, 0}
 	result := []int{}
-	var x, y float64
+	var x, y float32
 
 	for len(stack) > 0 {
 		axis := stack[len(stack)-1]
@@ -71,7 +71,7 @@ func (bush *KDBush) Range(minX, minY, maxX, maxY float64) []int {
 			continue
 		}
 
-		m := floor(float64(left+right) / 2.0)
+		m := floor(float32(left+right) / float32(2.0))
 
 		x = bush.coords[2*m]
 		y = bush.coords[2*m+1]
@@ -99,7 +99,7 @@ func (bush *KDBush) Range(minX, minY, maxX, maxY float64) []int {
 }
 
 // Finds all items within a given radius from the query point and returns an array of indices.
-func (bush *KDBush) Within(point Point, radius float64) []int {
+func (bush *KDBush) Within(point Point, radius float32) []int {
 	stack := []int{0, len(bush.idxs) - 1, 0}
 	result := []int{}
 	r2 := radius * radius
@@ -123,7 +123,7 @@ func (bush *KDBush) Within(point Point, radius float64) []int {
 			continue
 		}
 
-		m := floor(float64(left+right) / 2.0)
+		m := floor(float32(left+right) / float32(2.0))
 		x := bush.coords[2*m]
 		y := bush.coords[2*m+1]
 
@@ -160,7 +160,7 @@ func (bush *KDBush) buildIndex(points []Point, nodeSize int) {
 	bush.Points = points
 
 	bush.idxs = make([]int, len(points))
-	bush.coords = make([]float64, 2*len(points))
+	bush.coords = make([]float32, 2*len(points))
 
 	for i, v := range points {
 		bush.idxs[i] = i
@@ -172,12 +172,12 @@ func (bush *KDBush) buildIndex(points []Point, nodeSize int) {
 	sort(bush.idxs, bush.coords, bush.NodeSize, 0, len(bush.idxs)-1, 0)
 }
 
-func sort(idxs []int, coords []float64, nodeSize int, left, right, depth int) {
+func sort(idxs []int, coords []float32, nodeSize int, left, right, depth int) {
 	if (right - left) <= nodeSize {
 		return
 	}
 
-	m := floor(float64(left+right) / 2.0)
+	m := floor(float32(left+right) / float32(2.0))
 
 	sselect(idxs, coords, m, left, right, depth%2)
 
@@ -186,22 +186,22 @@ func sort(idxs []int, coords []float64, nodeSize int, left, right, depth int) {
 
 }
 
-func sselect(idxs []int, coords []float64, k, left, right, inc int) {
+func sselect(idxs []int, coords []float32, k, left, right, inc int) {
 	//whatever you want
 	for right > left {
 		if (right - left) > 600 {
 			n := right - left + 1
 			m := k - left + 1
 			z := math.Log(float64(n))
-			s := 0.5 * math.Exp(2.0*z/3.0)
+			s := float32(0.5 * math.Exp(2.0*z/3.0))
 			sds := 1.0
-			if float64(m)-float64(n)/2.0 < 0 {
+			if float32(m)-float32(n)/2.0 < 0 {
 				sds = -1.0
 			}
-			n_s := float64(n) - s
-			sd := 0.5 * math.Sqrt(z*s*n_s/float64(n)) * sds
-			newLeft := iMax(left, floor(float64(k)-float64(m)*s/float64(n)+sd))
-			newRight := iMin(right, floor(float64(k)+float64(n-m)*s/float64(n)+sd))
+			n_s := float32(n) - s
+			sd := float32(0.5 * math.Sqrt(float64(float32(z)*s*n_s/float32(n))) * sds)
+			newLeft := iMax(left, floor(float32(k)-float32(m)*s/float32(n)+sd))
+			newRight := iMin(right, floor(float32(k)+float32(n-m)*s/float32(n)+sd))
 			sselect(idxs, coords, k, newLeft, newRight, inc)
 		}
 
@@ -242,13 +242,13 @@ func sselect(idxs []int, coords []float64, k, left, right, inc int) {
 	}
 }
 
-func swapItem(idxs []int, coords []float64, i, j int) {
+func swapItem(idxs []int, coords []float32, i, j int) {
 	swapi(idxs, i, j)
 	swapf(coords, 2*i, 2*j)
 	swapf(coords, 2*i+1, 2*j+1)
 }
 
-func swapf(a []float64, i, j int) {
+func swapf(a []float32, i, j int) {
 	t := a[i]
 	a[i] = a[j]
 	a[j] = t
@@ -276,12 +276,12 @@ func iMin(a, b int) int {
 	}
 }
 
-func floor(in float64) int {
-	out := math.Floor(in)
+func floor(in float32) int {
+	out := math.Floor(float64(in))
 	return int(out)
 }
 
-func sqrtDist(ax, ay, bx, by float64) float64 {
+func sqrtDist(ax, ay, bx, by float32) float32 {
 	dx := ax - bx
 	dy := ay - by
 	return dx*dx + dy*dy
