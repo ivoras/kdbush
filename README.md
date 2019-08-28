@@ -1,5 +1,7 @@
 # KDBsuh
 
+** This is a fork of the original `MapAppGang/kdbush` code which uses float32 instead of float32 for point data **
+
 [Godoc is here](https://godoc.org/github.com/MadAppGang/kdbush)
 
 Package kdbush provides a very fast static spatial index for 2D points based on a flat KD-tree.
@@ -28,16 +30,16 @@ This implementation is based on:
 All Items should implement Point interface:
 ```go
 type Point interface {
-	Coordinates() (X, Y float64)
+	Coordinates() (X, Y float32)
 }
 ```
 
 Package represents simple struct, that implements that protocol, you could use it:
 ```go
 type SimplePoint struct {
-	X, Y float64
+	X, Y float32
 }
-func (sp *SimplePoint)Coordinates()(float64, float64) {
+func (sp *SimplePoint)Coordinates()(float32, float32) {
 	return sp.X, sp.Y
 }
 
